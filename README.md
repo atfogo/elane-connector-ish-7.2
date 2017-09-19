@@ -115,9 +115,9 @@ On should prefer adjusting the data-layer configuration as described in chapter 
 
 ## 6. License
 
-Copyright (c) 2017 Atfogo GmbH.
+Copyright (c) 2017 atfogo GmbH.
 
-Atfogo and elane.io are registered trademarks of Atfogo GmbH and/or its affiliates. Intershop is registered trademark of Intershop Communications AG. Other names appearing in this document may be trademarks of their respective owners.
+Atfogo and elane.io are registered trademarks of atfogo GmbH and/or its affiliates. Intershop is registered trademark of Intershop Communications AG. Other names appearing in this document may be trademarks of their respective owners.
 
 The elane.io connector is licensed under the MIT License. See LICENSE for details.
 
