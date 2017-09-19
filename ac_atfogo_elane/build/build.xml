@@ -1,0 +1,648 @@
+<?xml version="1.0"?>
+<project name="ps.c.build" default="build">
+    <description>
+        This main component build script is used as entry point to build a single 
+        component.
+        In addition to build.properties in the ${project.home}/build/shared folder, 
+        it expects intershop.properties to determine global properties.
+        is.home must be passed either via an ant parameter (latest builds) or
+        via a specific parameter passed from caller (smoke builds).
+        The file imports ${project.home}/build/shared/properties.xml to set
+        some general build properties.
+        Before running build targets, the script checks the build environment
+        for one component. The following checks are processed:
+        -is.home:       must exist and not contain backslashes
+        -is.share:      must exist and not contain backslashes
+        -is.source:     must exist and not contain backslashes
+        -is.target:     must exist and not contain backslashes
+        -project.home:  must exist and not contain backslashes
+        -oracle.home:   must exist and not contain backslashes
+        -platform.id:   read from intershop.properties
+        -${is.share}/system/cartridges/cartridgelist.properties:
+                        must exist
+        Build targets provided by this build script are executed only if an
+        according build script is available.
+    </description>
+
+    <!--Load first individual component properties                          -->
+    <property file="local.properties"/>
+
+    <!--Since relative pathes do not work for Unix since links are resolved,-->
+    <!--the imports must work with absolute pathes. Therefore the pathes    -->
+    <!--must be read before checking is possible.                           -->
+    <property file="${is.home}/intershop.properties"/>
+
+    <!--Import general properties targets                                   -->
+    <!--Seems to have problems with subant and basedir                      -->
+    <import file="${PROJECT_HOME}/build/shared/properties.xml"/>
+
+    <!--Determine the component's name                                      -->
+    <basename property="component.name" file=".."/>
+
+    <!--Init general properties                                             -->
+    <target name="ps.c.build.init" 
+            depends="s.properties">
+        <fail unless="is.home">
+            ${is.home} has not been set.
+        </fail>
+        <available property="intershop.properties.available" file="${is.home}/intershop.properties"/>
+        <fail unless="intershop.properties.available">
+            ${is.home}/intershop.properties has not been found.
+        </fail>
+    </target>
+    
+    <!--Checks component environment                                        -->
+    <target name="ps.c.build.check.general" 
+            depends="ps.c.build.init,
+                     s.properties.intershop.properties">
+
+        <condition property="ps.c.build.available">
+            <and>
+                <isset property="is.home"/>
+                <isset property="is.share"/>
+                <isset property="is.source"/>
+                <isset property="is.target"/>
+                <isset property="project.home"/>
+                <isset property="oracle.home"/>
+                <isset property="platform.id"/>
+                <not>
+                    <or>
+                        <contains string="${is.home}"      substring="\\"/>
+                        <contains string="${is.share}"     substring="\\"/>
+                        <contains string="${is.source}"    substring="\\"/>
+                        <contains string="${is.target}"    substring="\\"/>
+                        <contains string="${project.home}" substring="\\"/>
+                        <contains string="${oracle.home}"  substring="\\"/>
+                    </or>
+                </not>
+                <available file="${is.home}"/>
+                <available file="${is.share}"/>
+                <available file="${is.source}"/>
+                <available file="${is.target}"/>
+                <available file="${project.home}"/>
+                <available file="${oracle.home}"/>
+                <available file="${is.share}/system/cartridges/cartridgelist.properties"/>
+            </and>
+        </condition>
+        <fail unless="ps.c.build.available">
+            The component build environment for component '${component.name}' is not ok.
+            Please check whether all pathes exist and contain no backslashes.
+              is.home:                  ${is.home}
+              is.share:                 ${is.share}
+              is.source:                ${is.source}
+              is.target:                ${is.target}
+              project.home:               ${project.home}
+              oracle.home:              ${oracle.home}
+              cartridgelist.properties: ${is.share}/system/cartridges/cartridgelist.properties
+              platform id:              ${platform.id}
+        </fail>
+    </target>
+    <target name="ps.c.build.check" 
+            depends="ps.c.build.check.general">
+        <condition property="clean.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/clean.xml"/>
+        </condition>
+        <condition property="bootstrap.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/bootstrap.xml"/>
+        </condition>
+        <condition property="environment.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/environment.xml"/>
+        </condition>
+        <condition property="jcc.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/jcc.xml"/>
+        </condition>
+        <condition property="jaxb.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/jaxb.xml"/>
+        </condition>
+        <condition property="wsdl.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/wsdl.xml"/>
+        </condition>
+        <condition property="compile.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/compile.xml"/>
+        </condition>
+        <condition property="msbin.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/msbin.xml"/>
+        </condition>
+        <condition property="rapi.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/rapi.xml"/>
+        </condition>
+        <condition property="pipelets.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/pipelets.xml"/>
+        </condition>
+        <condition property="orm.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/orm.xml"/>
+        </condition>
+        <condition property="localize.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/localize.xml"/>
+        </condition> 
+        <condition property="precompile.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/precompile.xml"/>
+        </condition> 
+        <condition property="javadoc.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/javadoc.xml"/>
+        </condition>
+        <condition property="jar.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/jar.xml"/>
+        </condition>
+        <condition property="zip.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/zip.xml"/>
+        </condition>
+        <condition property="pack.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/pack.xml"/>
+        </condition>
+        <condition property="war.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/war.xml"/>
+        </condition>
+        <condition property="make.xml.location"
+                   value="${is.source}/${component.name}/build"
+                   else="${project.home}/build/shared/cartridge">
+            <available file="${is.source}/${component.name}/build/make.xml"/>
+        </condition>
+        
+        <available property="clean.xml.available"       file="${clean.xml.location}/clean.xml"/>
+        <available property="bootstrap.xml.available"   file="${bootstrap.xml.location}/bootstrap.xml"/>
+        <available property="environment.xml.available" file="${environment.xml.location}/environment.xml"/>
+        <available property="jcc.xml.available"         file="${jcc.xml.location}/jcc.xml"/>
+        <available property="jaxb.xml.available"        file="${jaxb.xml.location}/jaxb.xml"/>
+        <available property="wsdl.xml.available"        file="${wsdl.xml.location}/wsdl.xml"/>
+        <available property="compile.xml.available"     file="${compile.xml.location}/compile.xml"/>
+        <available property="msbin.xml.available"       file="${msbin.xml.location}/msbin.xml"/>
+        <available property="rapi.xml.available"        file="${rapi.xml.location}/rapi.xml"/>
+        <available property="pipelets.xml.available"    file="${pipelets.xml.location}/pipelets.xml"/>
+        <available property="orm.xml.available"         file="${orm.xml.location}/orm.xml"/>
+        <available property="localize.xml.available"    file="${localize.xml.location}/localize.xml"/>
+        <available property="precompile.xml.available"  file="${precompile.xml.location}/precompile.xml"/>
+        <available property="javadoc.xml.available"     file="${javadoc.xml.location}/javadoc.xml"/>
+        <available property="jar.xml.available"         file="${jar.xml.location}/jar.xml"/>
+        <available property="zip.xml.available"         file="${zip.xml.location}/zip.xml"/>
+        <available property="pack.xml.available"        file="${pack.xml.location}/pack.xml"/>
+        <available property="war.xml.available"         file="${war.xml.location}/war.xml"/>
+        <available property="make.xml.available"        file="${make.xml.location}/make.xml"/>       
+    </target>
+    
+    <!--Read additional properties for the environment and prints a build   -->
+    <!--start message for this component                                    -->
+    <target name="ps.c.build.read.general" 
+            depends="ps.c.build.check">
+        <echo message="Running ${build.type} build for component ${component.name}"/>
+        <echo message="  platform family:        ${platform.family}"/>
+        <echo message="  platform id:            ${platform.id}"/>
+        <echo message="  is.home points to:      ${is.home}"/>
+        <echo message="  is.share points to:     ${is.share}"/>
+        <echo message="  is.source points to:    ${is.source}"/>
+        <echo message="  is.target points to:    ${is.target}"/>
+        <echo message="  project.home points to: ${project.home}"/>
+        <echo message="  oracle.home points to:  ${oracle.home}"/>
+    </target>
+    <target name="environment.read" 
+            depends="ps.c.build.read.general">
+    </target>
+
+    <!--Creates resp. updates the environment for one component             -->
+    <target name="environment" 
+            depends="ps.c.build.check"
+            if="environment.xml.available">
+        <ant antfile="${environment.xml.location}/environment.xml"
+             dir="${environment.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+
+    <!--Cleans one single component                                         -->
+    <target name="clean"
+            depends="environment.read"
+            if="clean.xml.available"
+            description="Cleans build results of one single component.">
+        <ant antfile="${clean.xml.location}/clean.xml"
+             dir="${clean.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Bootstraps one single component                                     -->
+    <target name="bootstrap"
+            depends="environment.read"
+            if="bootstrap.xml.available"
+            description="Bootstraps one single component.">
+        <ant antfile="${bootstrap.xml.location}/bootstrap.xml"
+             dir="${bootstrap.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Creates the java compiler compiler                                  -->
+    <target name="jcc"
+            depends="environment"
+            if="jcc.xml.available"
+            description="Creates the java compiler compiler.">
+        <ant antfile="${jcc.xml.location}/jcc.xml"
+             dir="${jcc.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Call the JAXB schema compiler to generate Java binding objects      -->
+    <target name="jaxb"
+            depends="environment"
+            if="jaxb.xml.available"
+            description="Call the JAXB schema compiler to generate Java binding objects.">
+        <ant antfile="${jaxb.xml.location}/jaxb.xml"
+             dir="${jaxb.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Call the WSDL schema compiler to generate Java binding objects      -->
+    <target name="wsdl"
+            depends="environment"
+            if="wsdl.xml.available"
+            description="Call the WSDL schema compiler to generate Java binding objects.">
+        <ant antfile="${wsdl.xml.location}/wsdl.xml"
+             dir="${wsdl.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Compiles one single component                                       -->
+    <target name="compile"
+            depends="environment"
+            if="compile.xml.available"
+            description="Compiles one single component.">
+        <ant antfile="${compile.xml.location}/compile.xml"
+             dir="${compile.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Creates MS binaries from sources                                    -->
+    <target name="msbin"
+            depends="environment"
+            if="msbin.xml.available"
+            description="Creates MS binaries from sources of one single component.">
+        <ant antfile="${msbin.xml.location}/msbin.xml"
+             dir="${msbin.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Compiles rapi sources of one single component                       -->
+    <target name="rapi"
+            depends="environment"
+            if="rapi.xml.available"
+            description="Compiles rapi sources of one single component.">
+        <ant antfile="${rapi.xml.location}/rapi.xml"
+             dir="${rapi.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Generates pipelet resources of one single component                 -->
+    <target name="pipelets"
+            depends="environment"
+            if="pipelets.xml.available"
+            description="Generates pipelet resources of one single component.">
+        <ant antfile="${pipelets.xml.location}/pipelets.xml"
+             dir="${pipelets.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Generates ORM resources of one single component                     -->
+    <target name="orm"
+            depends="environment"
+            if="orm.xml.available"
+            description="Generates ORM resources of one single component.">
+        <ant antfile="${orm.xml.location}/orm.xml"
+             dir="${orm.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Creates localized templates                                         -->
+    <target name="localize"
+            depends="environment"
+            if="localize.xml.available"
+            unless="localize.disable"
+            description="Creates localized templates.">
+        <ant antfile="${localize.xml.location}/localize.xml"
+             dir="${localize.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+    <!--Pre-compiles templates of one single component                      -->
+    <target name="precompile"
+            depends="environment"
+            if="precompile.xml.available"
+            description="Pre-compiles templates of one single component.">
+        <ant antfile="${precompile.xml.location}/precompile.xml"
+             dir="${precompile.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+    <!--Creates the java docu of one single component                       -->
+    <target name="javadoc"
+            depends="environment.read"
+            if="javadoc.xml.available"
+            description="Prepares the package-list file for the java docu of one single component.">
+        <ant antfile="${javadoc.xml.location}/javadoc.xml"
+             dir="${javadoc.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+    <!--Jars one single component                                           -->
+    <target name="jar"
+            depends="environment"
+            if="jar.xml.available"
+            description="Jars one single component.">
+        <ant antfile="${jar.xml.location}/jar.xml"
+             dir="${jar.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+    <!--Zips one single component                                           -->
+    <target name="zip"
+            depends="environment"
+            if="zip.xml.available"
+            description="Zips one single component.">
+        <ant antfile="${zip.xml.location}/zip.xml"
+             dir="${zip.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+    <!--Creates the war archives of one single component                    -->
+    <target name="war"
+            depends="environment"
+            if="war.xml.available"
+            description="Creates war archives of one single component.">
+        <ant antfile="${war.xml.location}/war.xml"
+             dir="${war.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+    <!--Creates binaries from C sources                                     -->
+    <target name="make"
+            depends="environment"
+            if="make.xml.available"
+            description="Creates binaries from C sources.">
+        <ant antfile="${make.xml.location}/make.xml"
+             dir="${make.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+    
+    <!--Packs one single component                                          -->
+    <target name="pack"
+            depends="environment.read"
+            if="pack.xml.available"
+            description="Packs one single component.">
+        <ant antfile="${pack.xml.location}/pack.xml"
+             dir="${pack.xml.location}"
+             inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="build.type"/>
+                <propertyref name="component.name"/>
+            </propertyset>
+        </ant>
+    </target>
+
+
+    <!--Executes the default build steps in according to the build type.    -->
+    <target name="build.latest.execute"
+            depends="environment.read, jcc, jaxb, wsdl, compile, msbin, rapi, pipelets, orm, localize, precompile, jar, zip, war">
+    </target>
+    <target name="build.latest"
+            depends="ps.c.build.check"
+            if="build.latest">
+        <antcall target="build.latest.execute"
+                 inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="is.release"/>
+                <propertyref name="is.log"/>
+                <propertyref name="build.type"/>
+                <propertyref name="localize.disable"/>
+            </propertyset>
+        </antcall>
+    </target>
+
+    <target name="build.rolling.execute"
+            depends="environment.read, jcc, jaxb, wsdl, compile, msbin, rapi, pipelets, orm, localize, precompile, jar, zip, war, make">
+    </target>
+    <target name="build.rolling"
+            depends="ps.c.build.check"
+            if="build.rolling">
+        <antcall target="build.rolling.execute"
+                 inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="is.release"/>
+                <propertyref name="is.log"/>
+                <propertyref name="build.type"/>
+            </propertyset>
+        </antcall>
+    </target>
+
+    <target name="build.smoke.execute"
+            depends="environment.read, jcc, jaxb, wsdl, compile, msbin, rapi, pipelets, orm, localize, precompile, javadoc, jar, zip, war, make, pack">
+    </target>
+    <target name="build.smoke"
+            depends="ps.c.build.check"
+            if="build.smoke">
+        <antcall target="build.smoke.execute"
+                 inheritall="false">
+            <propertyset>
+                <propertyref name="is.home"/>
+                <propertyref name="is.source"/>
+                <propertyref name="project.home"/>
+                <propertyref name="is.release"/>
+                <propertyref name="is.log"/>
+                <propertyref name="build.type"/>
+            </propertyset>
+        </antcall>
+    </target>
+            
+    <target name="build"
+            depends="build.latest, 
+                     build.rolling,
+                     build.smoke"
+            description="Runs all build steps for a component in according to the build type.">
+    </target>
+    
+</project>
+

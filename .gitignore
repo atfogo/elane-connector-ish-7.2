@@ -1,0 +1,7 @@
+# Intershop Studio
+**/.classpath
+**/.project
+**/bin/
+
+# Ant
+**/release/
