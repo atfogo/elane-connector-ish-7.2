@@ -9,7 +9,7 @@ The following Intershop versions are supported out of the box.
 
 ## 1. Introduction
 
-The elane.io connector adds a new service based on the standard `TrackingSFI` framework. After activating the service at the application level a JavaScript data-layer snippet is included by `<ISIncludeTrackingTool ... >` into the `DefaultPageStructure.isml` which is the basis for every displayed storefront page. Supported template names are `MainFrameHeader` and `MainFrameFooter`.
+The elane.io connector adds a new service based on the standard `TrackingSFI` framework to Intershop. After activating the service at the application level a JavaScript data-layer snippet is included by `<ISIncludeTrackingTool ... >` into the `DefaultPageStructure.isml` which is the basis for every displayed storefront page. Supported template names are `MainFrameHeader` and `MainFrameFooter`.
 
 ## 2. Prerequisites
 
@@ -28,7 +28,7 @@ For the sake of simplicity the rest of this document assumes that Linux with Bas
 
 The elane.io connector is available in source form which can be downloaded from the official git repository.
 
-    # git clone http://github.com/atfogo/elane-connector-ish-7.2.git
+    # git clone https://github.com/atfogo/elane-connector-ish-7.2.git
 
 In the local development environment the downloaded sources should be placed into the directory `$IS_SOURCE`.
 
@@ -42,7 +42,7 @@ Minor changes to the source code could be necessary if the pipeline dictionary k
 
 In order for the elane.io connector to work. The cartridge `ac_atfogo_elane` has to be added to the backoffice and to the storefront cartridge list.
 
-Optionally edit the file `ac_atfogo_elane/staticfiles/cartridge/components/app-extension.component` to assign the cartridge lists as necessary. 
+Edit the file `ac_atfogo_elane/staticfiles/cartridge/components/app-extension.component` to assign the cartridge lists as necessary. 
 
 ### 4.2. Adjust the data-layer configuration
 
@@ -54,15 +54,15 @@ For example:
 
     elane.dataLayer[systempage.checkout.address.pagelet2]= PageType = 'checkout'; PageIndex = #CurrentStep#
 
-In this example configuration when the checkout address page is displayed the `ElaneDataLayer:PageType` is set to the literal value `checkout` while the `ElaneDataLayer:PageIndex`is set to the value of `CurrentStep` found in the current `PipelineDictionary`.
+In this example when the checkout address page is displayed the `ElaneDataLayer:PageType` is set to the literal value `checkout` while the `ElaneDataLayer:PageIndex`is set to the value of `CurrentStep` found in the current `PipelineDictionary`.
 
-Optionally edit the file `ac_atfogo_elane/staticfiles/cartridge/config/elane.properties` to adjust the data-layer configuration as necessary.
+Edit the file `ac_atfogo_elane/staticfiles/cartridge/config/elane.properties` to adjust the data-layer configuration as necessary.
 
 ### 4.3. Set up the logging
 
-To ease customization for every `PageletEntryPoint` without a corresponding data-layer configuration a reminder is logged at `INFO` level upon each HTTP request. This may produce too much log if not every page should be tracked by elane.io.
+A reminder is logged at `INFO` level upon each HTTP request for every `PageletEntryPoint` without a corresponding data-layer configuration. This may produce too much log if not every page should be tracked by elane.io.
 
-Optionally edit the file `ac_atfogo_elane/staticfiles/share/system/config/cartridges/logback-ac_atfogo_elane.xml` to set up the logging for production as necessary.
+Edit the file `ac_atfogo_elane/staticfiles/share/system/config/cartridges/logback-ac_atfogo_elane.xml` to set up the logging for production as necessary.
 
 ### 4.4. Build the cartridge
 
@@ -75,15 +75,17 @@ In the local development environment the compiled artifacts should be available 
 
 ### 4.5 Assign the cartridge to the application server cartridge list
 
-Add the cartridge `ac_atfogo_elane` to the application server's cartridge list then restart the application server.
+Add the cartridge `ac_atfogo_elane` to the application server's cartridge list.
 
 Edit the file `$IS_SHARE/system/cartridges/cartridgelist.properties`.
+
+Restart the application server.
 
 ## 5. Configuration of the service
 
 After successful deployment the elane.io service has to be configured in the Intershop backoffice.
 
-The following steps may be automatized by using `dbinit` or `dbmigrate`.
+The following steps may be automated by `dbinit` or `dbmigrate`.
 
 ### 5.1. Operations
 
@@ -109,9 +111,9 @@ The following steps may be automatized by using `dbinit` or `dbmigrate`.
 
 ### 5.3 Manual versus automatic integration
 
-The key difference between _Manual_ and _Automatic_ integration is, that _Automatic_ integration relies on the data-layer configuration to generate the `et.push(...)` while _Manual_ integration expects `et.push(...)` to be hard coded in every ISML page.
+The key difference between _Manual_ and _Automatic_ integration is, that _Automatic_ integration relies on the data-layer configuration to generate the `et.push(...)` commands while _Manual_ integration loads only the remote tracking script and expects the `et.push(...)` commands to be hard coded in every ISML page.
 
-On should prefer adjusting the data-layer configuration as described in chapter 4.2 and using the _Automatic_ integration. 
+One should prefer adjusting the data-layer configuration as described in chapter 4.2 and using the _Automatic_ integration. 
 
 ## 6. License
 
